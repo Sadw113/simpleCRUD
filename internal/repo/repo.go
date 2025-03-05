@@ -82,7 +82,7 @@ func (r *repository) CreateTask(ctx context.Context, task Task) (int, error) {
 func (r *repository) GetTaskByID(ctx context.Context, id uint32) (*Task, error) {
 	task := Task{}
 
-	if err := r.pool.QueryRow(ctx, getTaskByIdQuery, id).Scan(&task.Title, &task.Description); err != nil {
+	if err := r.pool.QueryRow(ctx, getTaskByIdQuery, id).Scan(nil, &task.Title, &task.Description, nil, nil, nil); err != nil {
 		return &task, errors.New("failed to select task")
 	}
 
