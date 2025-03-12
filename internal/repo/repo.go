@@ -99,7 +99,7 @@ func (r *repository) GetTaskByID(ctx context.Context, id uint32) (*Task, error) 
 func (r *repository) UpdateTask(ctx context.Context, id uint32, currentStatus string) error {
 	_, err := r.pool.Exec(ctx, setStatusQuery, currentStatus, id)
 	if err != nil {
-		errors.Wrap(err, "failed to update task")
+		return errors.Wrap(err, "failed to update task")
 	}
 
 	return nil
@@ -108,7 +108,7 @@ func (r *repository) UpdateTask(ctx context.Context, id uint32, currentStatus st
 func (r *repository) DeleteTask(ctx context.Context, id uint32) error {
 	_, err := r.pool.Exec(ctx, deleteTaskQuery, id)
 	if err != nil {
-		errors.Wrap(err, "failed to delete task")
+		return errors.Wrap(err, "failed to delete task")
 	}
 
 	return nil
@@ -120,14 +120,14 @@ func (r *repository) GetTasks(ctx context.Context) (map[string]Task, error) {
 
 	rows, err := r.pool.Query(ctx, getTasksQuery)
 	if err != nil {
-		errors.Wrap(err, "failed to select tasks")
+		return tasks, errors.Wrap(err, "failed to select tasks")
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.Status)
 		if err != nil {
-			errors.Wrap(err, "failed to scan fields of task")
+			return tasks, errors.Wrap(err, "failed to scan fields of task")
 		}
 
 		strID := strconv.Itoa(task.ID)
