@@ -32,7 +32,7 @@ type repository struct {
 type Repository interface {
 	CreateTask(ctx context.Context, task Task) (int, error)    // Создание задачи
 	GetTaskByID(ctx context.Context, id uint32) (*Task, error) // Получение задачи по id
-	UpdateTask(ctx context.Context, id uint32, currentStatus string) error
+	UpdateTask(ctx context.Context, task Task) error
 	DeleteTask(ctx context.Context, id uint32) error
 	GetTasks(ctx context.Context) (map[string]Task, error)
 }
@@ -89,15 +89,15 @@ func (r *repository) CreateTask(ctx context.Context, task Task) (int, error) {
 func (r *repository) GetTaskByID(ctx context.Context, id uint32) (*Task, error) {
 	task := Task{}
 
-	if err := r.pool.QueryRow(ctx, getTaskByIdQuery, id).Scan(nil, &task.Title, &task.Description, &task.Status); err != nil {
+	if err := r.pool.QueryRow(ctx, getTaskByIdQuery, id).Scan(&task.ID, &task.Title, &task.Description, &task.Status); err != nil {
 		return &task, errors.New("failed to select task")
 	}
 
 	return &task, nil
 }
 
-func (r *repository) UpdateTask(ctx context.Context, id uint32, currentStatus string) error {
-	_, err := r.pool.Exec(ctx, setStatusQuery, currentStatus, id)
+func (r *repository) UpdateTask(ctx context.Context, task Task) error {
+	_, err := r.pool.Exec(ctx, setStatusQuery, task.Status, task.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to update task")
 	}

@@ -85,12 +85,6 @@ func (s *service) GetTaskByID(ctx *fiber.Ctx) error {
 }
 
 func (s *service) UpdateTask(ctx *fiber.Ctx) error {
-	id, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		s.log.Error("Failed to parse id from request", zap.Error(err))
-		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Invalid request body")
-	}
-
 	var req UpdateTaskRequest
 
 	// Десериализация JSON-запроса
@@ -104,9 +98,12 @@ func (s *service) UpdateTask(ctx *fiber.Ctx) error {
 		return dto.BadResponseError(ctx, dto.FieldIncorrect, vErr.Error())
 	}
 
-	status := req.Status
+	task := repo.Task{
+		ID:     req.ID,
+		Status: req.Status,
+	}
 
-	err = s.repo.UpdateTask(ctx.Context(), uint32(id), status)
+	err := s.repo.UpdateTask(ctx.Context(), task)
 	if err != nil {
 		s.log.Error("Failed to update table", zap.Error(err))
 		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Failed to update table")
