@@ -39,18 +39,15 @@ func NewService(repo repo.Repository, logger *zap.SugaredLogger) Service {
 func (s *service) CreateTask(ctx *fiber.Ctx) error {
 	var req CreateTaskRequest
 
-	// Десериализация JSON-запроса
 	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
 		s.log.Error("Invalid request body", zap.Error(err))
 		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Invalid request body")
 	}
 
-	// Валидация входных данных
 	if vErr := validator.Validate(ctx.Context(), req); vErr != nil {
 		return dto.BadResponseError(ctx, dto.FieldIncorrect, vErr.Error())
 	}
 
-	// Вставка задачи в БД через репозиторий
 	task := repo.Task{
 		Title:       req.Title,
 		Description: req.Description,
@@ -87,13 +84,11 @@ func (s *service) GetTaskByID(ctx *fiber.Ctx) error {
 func (s *service) UpdateTask(ctx *fiber.Ctx) error {
 	var req UpdateTaskRequest
 
-	// Десериализация JSON-запроса
 	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
 		s.log.Error("Invalid request body", zap.Error(err))
 		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Invalid request body")
 	}
 
-	// Валидация входных данных
 	if vErr := validator.Validate(ctx.Context(), req); vErr != nil {
 		return dto.BadResponseError(ctx, dto.FieldIncorrect, vErr.Error())
 	}
