@@ -4,8 +4,6 @@ import (
 	"time"
 )
 
-// Общая конфигурация сервиса, тут должны быть все переменные
-
 type AppConfig struct {
 	LogLevel   string
 	Rest       Rest

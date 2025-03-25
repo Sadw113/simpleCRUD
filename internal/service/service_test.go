@@ -17,11 +17,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// TestCreateTask - тестирование метода CreateTask
 func TestCreateTask(t *testing.T) {
 	// Создаем мок репозитория
 	mockRepo := new(mocks.Repository)
-	logger := zap.NewNop().Sugar() // Без вывода логов
+	logger := zap.NewNop().Sugar()
 
 	// Создаем экземпляр сервиса с мок-репозиторием
 	s := NewService(mockRepo, logger)
@@ -104,5 +103,21 @@ func TestCreateTask(t *testing.T) {
 		assert.Equal(t, "error", response.Status)
 
 		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestGetTaskByID(t *testing.T) {
+	mockRepo := new(mocks.Repository)
+	logger := zap.NewNop().Sugar()
+
+	s := NewService(mockRepo, logger)
+
+	app := fiber.New()
+	app.Post("/tasks", s.GetTaskByID)
+
+	t.Run("ожидаем ошибку парсинга id", func(t *testing.T) {
+		// body := []byte(`{}`)
+		// req, err := http.NewRequest("GET", "/get_task/:id", bytes.NewReader(body))
+		// id, err := strconv.Atoi(ctx.Params("id"))
 	})
 }

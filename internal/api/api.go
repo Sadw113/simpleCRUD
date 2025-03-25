@@ -14,8 +14,6 @@ type Routers struct {
 
 func NewRouters(r *Routers, token string) *fiber.App {
 	app := fiber.New()
-
-	// Настройка CORS (разрешенные методы, заголовки, авторизация)
 	app.Use(cors.New(cors.Config{
 		AllowMethods:     "GET, POST, PUT, DELETE",
 		AllowHeaders:     "Accept, Authorization, Content-Type, X-CSRF-Token, X-REQUEST-SomeID",

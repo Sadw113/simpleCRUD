@@ -6,8 +6,6 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// Кастомный логгер, обычно в компаниях будет отдельный репозиторий или пакет с логером
-
 const tsKey = "timestamp"
 
 func NewLogger(level string) (*zap.SugaredLogger, error) {

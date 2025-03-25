@@ -13,9 +13,6 @@ import (
 	"simple-service/internal/config"
 )
 
-// Слой репозитория, здесь должны быть все методы, связанные с базой данных
-
-// SQL-запрос на вставку задачи
 const (
 	insertTaskQuery  = `INSERT INTO tasks (title, description) VALUES ($1, $2) RETURNING id;`
 	getTaskByIdQuery = `Select * FROM tasks WHERE id=$1;`
@@ -28,18 +25,15 @@ type repository struct {
 	pool *pgxpool.Pool
 }
 
-// Repository - интерфейс с методом создания задачи
 type Repository interface {
-	CreateTask(ctx context.Context, task Task) (int, error)    // Создание задачи
-	GetTaskByID(ctx context.Context, id uint32) (*Task, error) // Получение задачи по id
+	CreateTask(ctx context.Context, task Task) (int, error)
+	GetTaskByID(ctx context.Context, id uint32) (*Task, error)
 	UpdateTask(ctx context.Context, task Task) error
 	DeleteTask(ctx context.Context, id uint32) error
 	GetTasks(ctx context.Context) (map[string]Task, error)
 }
 
-// NewRepository - создание нового экземпляра репозитория с подключением к PostgreSQL
 func NewRepository(ctx context.Context, cfg config.PostgreSQL) (Repository, error) {
-	// Формируем строку подключения
 	connString := fmt.Sprintf(
 		`user=%s password=%s host=%s port=%d dbname=%s sslmode=%s 
         pool_max_conns=%d pool_max_conn_lifetime=%s pool_max_conn_idle_time=%s`,
@@ -54,16 +48,13 @@ func NewRepository(ctx context.Context, cfg config.PostgreSQL) (Repository, erro
 		cfg.PoolMaxConnIdleTime.String(),
 	)
 
-	// Парсим конфигурацию подключения
 	config, err := pgxpool.ParseConfig(connString)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse PostgreSQL config")
 	}
 
-	// Оптимизация выполнения запросов (кеширование запросов)
 	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeCacheDescribe
 
-	// Создаём пул соединений с базой данных
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create PostgreSQL connection pool")
@@ -76,7 +67,6 @@ func NewRepository(ctx context.Context, cfg config.PostgreSQL) (Repository, erro
 	return &repository{pool}, nil
 }
 
-// CreateTask - вставка новой задачи в таблицу tasks
 func (r *repository) CreateTask(ctx context.Context, task Task) (int, error) {
 	var id int
 	err := r.pool.QueryRow(ctx, insertTaskQuery, task.Title, task.Description).Scan(&id)

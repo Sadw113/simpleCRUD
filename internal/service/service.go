@@ -11,9 +11,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Слой бизнес-логики. Тут должна быть основная логика сервиса
-
-// Service - интерфейс для бизнес-логики
 type Service interface {
 	CreateTask(ctx *fiber.Ctx) error
 	GetTaskByID(ctx *fiber.Ctx) error
@@ -27,7 +24,6 @@ type service struct {
 	log  *zap.SugaredLogger
 }
 
-// NewService - конструктор сервиса
 func NewService(repo repo.Repository, logger *zap.SugaredLogger) Service {
 	return &service{
 		repo: repo,
@@ -35,7 +31,6 @@ func NewService(repo repo.Repository, logger *zap.SugaredLogger) Service {
 	}
 }
 
-// CreateTask - обработчик запроса на создание задачи
 func (s *service) CreateTask(ctx *fiber.Ctx) error {
 	var req CreateTaskRequest
 
