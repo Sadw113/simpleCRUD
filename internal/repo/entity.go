@@ -1,8 +1,8 @@
 package repo
 
-// Task - структура, соответствующая таблице tasks
 type Task struct {
 	ID          int
+	User_id     int
 	Title       string
 	Description string
 	Status      string

@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	insertTaskQuery  = `INSERT INTO tasks (title, description) VALUES ($1, $2) RETURNING id;`
-	getTaskByIdQuery = `Select * FROM tasks WHERE id=$1;`
-	setStatusQuery   = `UPDATE tasks SET status = $1 where id = $2;`
-	deleteTaskQuery  = `DELETE FROM tasks where id = $1`
-	getTasksQuery    = `SELECT * FROM tasks;`
+	insertTaskQuery    = `INSERT INTO tasks (title, description, user_id) VALUES ($1, $2, $3) RETURNING id;`
+	getTaskByIDXsQuery = `Select * FROM tasks WHERE id=$1 AND user_id = $2;`
+	setStatusQuery     = `UPDATE tasks SET status = $1 WHERE id = $2 AND user_id = $3 RETURNING id;`
+	deleteTaskQuery    = `DELETE FROM tasks WHERE id = $1 AND user_id = $2;`
+	getTasksQuery      = `SELECT * FROM tasks WHERE user_id = $1;`
 )
 
 type repository struct {
@@ -27,10 +27,10 @@ type repository struct {
 
 type Repository interface {
 	CreateTask(ctx context.Context, task Task) (int, error)
-	GetTaskByID(ctx context.Context, id uint32) (*Task, error)
+	GetTaskByIDXs(ctx context.Context, task Task) (*Task, error)
 	UpdateTask(ctx context.Context, task Task) error
-	DeleteTask(ctx context.Context, id uint32) error
-	GetTasks(ctx context.Context) (map[string]Task, error)
+	DeleteTask(ctx context.Context, task Task) error
+	GetTasks(ctx context.Context, user_id int) (map[string]Task, error)
 }
 
 func NewRepository(ctx context.Context, cfg config.PostgreSQL) (Repository, error) {
@@ -69,17 +69,15 @@ func NewRepository(ctx context.Context, cfg config.PostgreSQL) (Repository, erro
 
 func (r *repository) CreateTask(ctx context.Context, task Task) (int, error) {
 	var id int
-	err := r.pool.QueryRow(ctx, insertTaskQuery, task.Title, task.Description).Scan(&id)
+	err := r.pool.QueryRow(ctx, insertTaskQuery, task.Title, task.Description, task.User_id).Scan(&id)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to insert task")
 	}
 	return id, nil
 }
 
-func (r *repository) GetTaskByID(ctx context.Context, id uint32) (*Task, error) {
-	task := Task{}
-
-	if err := r.pool.QueryRow(ctx, getTaskByIdQuery, id).Scan(&task.ID, &task.Title, &task.Description, &task.Status); err != nil {
+func (r *repository) GetTaskByIDXs(ctx context.Context, task Task) (*Task, error) {
+	if err := r.pool.QueryRow(ctx, getTaskByIDXsQuery, task.ID, task.User_id).Scan(&task.ID, &task.User_id, &task.Title, &task.Description, &task.Status); err != nil {
 		return &task, errors.New("failed to select task")
 	}
 
@@ -87,7 +85,8 @@ func (r *repository) GetTaskByID(ctx context.Context, id uint32) (*Task, error) 
 }
 
 func (r *repository) UpdateTask(ctx context.Context, task Task) error {
-	_, err := r.pool.Exec(ctx, setStatusQuery, task.Status, task.ID)
+	var id int
+	err := r.pool.QueryRow(ctx, setStatusQuery, task.Status, task.ID, task.User_id).Scan(&id)
 	if err != nil {
 		return errors.Wrap(err, "failed to update task")
 	}
@@ -95,8 +94,9 @@ func (r *repository) UpdateTask(ctx context.Context, task Task) error {
 	return nil
 }
 
-func (r *repository) DeleteTask(ctx context.Context, id uint32) error {
-	_, err := r.pool.Exec(ctx, deleteTaskQuery, id)
+func (r *repository) DeleteTask(ctx context.Context, task Task) error {
+	var id int
+	err := r.pool.QueryRow(ctx, deleteTaskQuery, task.ID, task.User_id).Scan(&id)
 	if err != nil {
 		return errors.Wrap(err, "failed to delete task")
 	}
@@ -104,18 +104,18 @@ func (r *repository) DeleteTask(ctx context.Context, id uint32) error {
 	return nil
 }
 
-func (r *repository) GetTasks(ctx context.Context) (map[string]Task, error) {
+func (r *repository) GetTasks(ctx context.Context, user_id int) (map[string]Task, error) {
 	tasks := make(map[string]Task)
 	var task Task
 
-	rows, err := r.pool.Query(ctx, getTasksQuery)
+	rows, err := r.pool.Query(ctx, getTasksQuery, user_id)
 	if err != nil {
 		return tasks, errors.Wrap(err, "failed to select tasks")
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.Status)
+		err := rows.Scan(&task.ID, &task.User_id, &task.Title, &task.Description, &task.Status)
 		if err != nil {
 			return tasks, errors.Wrap(err, "failed to scan fields of task")
 		}
