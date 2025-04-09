@@ -1,6 +1,8 @@
 CREATE TABLE tasks (
-    id SERIAL PRIMARY KEY,             -- Уникальный идентификатор задачи
-    title TEXT NOT NULL,               -- Заголовок задачи
-    description TEXT,                  -- Описание задачи (необязательное поле)
-    status TEXT CHECK (status IN ('new', 'in_progress', 'done')) DEFAULT 'new' -- Статус задачи
+    id SERIAL PRIMARY KEY,
+	user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,               
+    description TEXT,                 
+    status TEXT CHECK (status IN ('new', 'in_progress', 'done')) DEFAULT 'new' ,
+	FOREIGN KEY (user_id) REFERENCES users
 );

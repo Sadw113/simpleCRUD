@@ -13,7 +13,7 @@ import (
 
 type Service interface {
 	CreateTask(ctx *fiber.Ctx) error
-	GetTaskByID(ctx *fiber.Ctx) error
+	GetTaskByIDXs(ctx *fiber.Ctx) error
 	DeleteTask(ctx *fiber.Ctx) error
 	UpdateTask(ctx *fiber.Ctx) error
 	GetTasks(ctx *fiber.Ctx) error
@@ -44,6 +44,7 @@ func (s *service) CreateTask(ctx *fiber.Ctx) error {
 	}
 
 	task := repo.Task{
+		User_id:     req.User_id,
 		Title:       req.Title,
 		Description: req.Description,
 	}
@@ -58,20 +59,36 @@ func (s *service) CreateTask(ctx *fiber.Ctx) error {
 	return response
 }
 
-func (s *service) GetTaskByID(ctx *fiber.Ctx) error {
+func (s *service) GetTaskByIDXs(ctx *fiber.Ctx) error {
+	var req GetTaskByIDXsRequest
+
+	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
+		s.log.Error("Invalid request body", zap.Error(err))
+		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Invalid request body")
+	}
+
+	if vErr := validator.Validate(ctx.Context(), req); vErr != nil {
+		return dto.BadResponseError(ctx, dto.FieldIncorrect, vErr.Error())
+	}
+
 	id, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
 		s.log.Error("Failed to parse id from request", zap.Error(err))
 		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Invalid request body")
 	}
 
-	task, err := s.repo.GetTaskByID(ctx.Context(), uint32(id))
+	task := repo.Task{
+		ID:      id,
+		User_id: req.User_id,
+	}
+
+	res_task, err := s.repo.GetTaskByIDXs(ctx.Context(), task)
 	if err != nil {
 		s.log.Error("Failed to selected from DB Table", zap.Error(err))
 		return dto.InternalServerError(ctx)
 	}
 
-	response := dto.StatusOK(ctx, task)
+	response := dto.StatusOK(ctx, res_task)
 
 	return response
 }
@@ -89,8 +106,9 @@ func (s *service) UpdateTask(ctx *fiber.Ctx) error {
 	}
 
 	task := repo.Task{
-		ID:     req.ID,
-		Status: req.Status,
+		ID:      req.ID,
+		User_id: req.User_id,
+		Status:  req.Status,
 	}
 
 	err := s.repo.UpdateTask(ctx.Context(), task)
@@ -111,7 +129,23 @@ func (s *service) DeleteTask(ctx *fiber.Ctx) error {
 		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Invalid request body")
 	}
 
-	err = s.repo.DeleteTask(ctx.Context(), uint32(id))
+	var req DeleteTaskRequest
+
+	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
+		s.log.Error("Invalid request body", zap.Error(err))
+		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Invalid request body")
+	}
+
+	if vErr := validator.Validate(ctx.Context(), req); vErr != nil {
+		return dto.BadResponseError(ctx, dto.FieldIncorrect, vErr.Error())
+	}
+
+	task := repo.Task{
+		ID:      id,
+		User_id: req.User_id,
+	}
+
+	err = s.repo.DeleteTask(ctx.Context(), task)
 	if err != nil {
 		s.log.Error("Failed to delete from table", zap.Error(err))
 		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Failed to delete from table")
@@ -123,7 +157,18 @@ func (s *service) DeleteTask(ctx *fiber.Ctx) error {
 }
 
 func (s *service) GetTasks(ctx *fiber.Ctx) error {
-	tasks, err := s.repo.GetTasks(ctx.Context())
+	var req GetTasksRequest
+
+	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
+		s.log.Error("Invalid request body", zap.Error(err))
+		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Invalid request body")
+	}
+
+	if vErr := validator.Validate(ctx.Context(), req.User_id); vErr != nil {
+		return dto.BadResponseError(ctx, dto.FieldIncorrect, vErr.Error())
+	}
+
+	tasks, err := s.repo.GetTasks(ctx.Context(), req.User_id)
 	if err != nil {
 		s.log.Error("Failed to select all tasks from table", zap.Error(err))
 		return dto.BadResponseError(ctx, dto.FieldBadFormat, "Failed to select all tasks from table")
