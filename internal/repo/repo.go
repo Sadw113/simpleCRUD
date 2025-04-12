@@ -3,8 +3,6 @@ package repo
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"strconv"
 
 	"github.com/jackc/pgx/v5"
 
@@ -70,10 +68,7 @@ func NewRepository(ctx context.Context, cfg config.PostgreSQL) (Repository, erro
 
 func (r *repository) CreateTask(ctx context.Context, task Task) (string, error) {
 	var id string
-	randNumb := rand.Intn(100)
-	id = strconv.Itoa(task.UserID) + "_" + strconv.Itoa(randNumb)
-
-	err := r.pool.QueryRow(ctx, insertTaskQuery, id, task.Title, task.Description, task.UserID).Scan(&id)
+	err := r.pool.QueryRow(ctx, insertTaskQuery, task.ID, task.Title, task.Description, task.UserID).Scan(&id)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to insert task")
 	}

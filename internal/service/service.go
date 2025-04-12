@@ -2,9 +2,11 @@ package service
 
 import (
 	"encoding/json"
+	"math/rand"
 	"simple-service/internal/dto"
 	"simple-service/internal/repo"
 	"simple-service/pkg/validator"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
@@ -42,7 +44,12 @@ func (s *service) CreateTask(ctx *fiber.Ctx) error {
 		return dto.BadResponseError(ctx, dto.FieldIncorrect, vErr.Error())
 	}
 
+	var id string
+	randNumb := rand.Intn(100)
+	id = strconv.Itoa(req.UserID) + "_" + strconv.Itoa(randNumb)
+
 	task := repo.Task{
+		ID:          id,
 		UserID:      req.UserID,
 		Title:       req.Title,
 		Description: req.Description,

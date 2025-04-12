@@ -15,22 +15,22 @@ type Repository struct {
 }
 
 // CreateTask provides a mock function with given fields: ctx, task
-func (_m *Repository) CreateTask(ctx context.Context, task repo.Task) (int, error) {
+func (_m *Repository) CreateTask(ctx context.Context, task repo.Task) (string, error) {
 	ret := _m.Called(ctx, task)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateTask")
 	}
 
-	var r0 int
+	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, repo.Task) (int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, repo.Task) (string, error)); ok {
 		return rf(ctx, task)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, repo.Task) int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, repo.Task) string); ok {
 		r0 = rf(ctx, task)
 	} else {
-		r0 = ret.Get(0).(int)
+		r0 = ret.Get(0).(string)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, repo.Task) error); ok {

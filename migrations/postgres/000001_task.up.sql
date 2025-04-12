@@ -1,5 +1,5 @@
 CREATE TABLE tasks (
-    id SERIAL PRIMARY KEY,
+    id TEXT,
 	user_id INTEGER NOT NULL,
     title TEXT NOT NULL,               
     description TEXT,                 
