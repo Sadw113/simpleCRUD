@@ -1,8 +1,8 @@
 package repo
 
 type Task struct {
-	ID          int
-	User_id     int
+	ID          string
+	UserID      int
 	Title       string
 	Description string
 	Status      string
